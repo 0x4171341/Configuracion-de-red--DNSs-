@@ -1,0 +1,49 @@
+#configuracion de red, DNSs, ruta por defecto y llamada a reglas de IpTables
+# parametros de red
+#configurar 2 tarjetas de red
+#Los parámetros tcp/ip de las dos tarjetas (NICs)
+#Los DNs
+#La ruta por defecto o de último recurso
+#La llamada a un script de ipTables
+#Habilitar el enrutamiento
+
+ipeth0=10.50.66.3;masketh0=255.255.255.0;redeth0=10.50.66.0;broadcasteth0=10.50.66.255;gweth0=10.50.66.1
+ipeth1=192.168.1.1;masketh1=255.255.255.0;redeth1=192.168.1.0;broadcasteth1=192.168.1.255
+echo Configurando los interfaces de red y el DNS. ...
+echo "auto lo" > /etc/network/interfaces
+echo "iface lo inet loopback" >> /etc/network/interfaces
+echo "# eth0 interfaz conectado al router" >> /etc/network/interfaces
+echo "auto eth0" >> /etc/network/interfaces
+echo "iface eth0 inet static" >> /etc/network/interfaces
+echo "        address $ipeth0" >> /etc/network/interfaces
+echo "        netmask $masketh0" >> /etc/network/interfaces
+echo "        network $redeth0" >> /etc/network/interfaces
+echo "        broadcast $broadcasteth0" >> /etc/network/interfaces
+echo "        gateway $gweth0" >> /etc/network/interfaces
+echo "# eth1 interfaz conectado a la LAN" >> /etc/network/interfaces
+echo "auto eth1" >> /etc/network/interfaces
+echo "iface eth1 inet static" >> /etc/network/interfaces
+echo "        address $ipeth1" >> /etc/network/interfaces
+echo "        netmask $masketh1" >> /etc/network/interfaces
+echo "        network $redeth1" >> /etc/network/interfaces
+echo "        broadcast $broadcasteth1" >> /etc/network/interfaces
+echo "# Ruta de ultimo recurso" >> /etc/network/interfaces
+echo "up route add -net 0.0.0.0/0 gw $gweth0 dev eth0" >> /etc/network/interfaces
+echo "# aplicamos reglas de iptables" >> /etc/network/interfaces
+echo "pre-up iptables-restore < /home/usuario/scripts/iptables.reglas.javcasta.up" >> /etc/network/interfaces
+echo "# ---- by javcasta - 2.011 - http://javcasta.com ---" >> /etc/network/interfaces
+# DNSs
+dns1=208.67.222.222
+dns2=208.67.220.220
+nombreservidor=$(hostname -s)
+dominio=$(hostname -d)
+echo "# by script - 2.011" > /etc/resolv.conf
+echo "search $dominio" >> /etc/resolv.conf
+echo "domain $dominio" >> /etc/resolv.conf
+echo "nameserver $dns1" >> /etc/resolv.conf
+echo "nameserver $dns2" >> /etc/resolv.conf
+# habilitar enrutamiento
+echo "1" > /proc/sys/net/ipv4/ip_forward
+# reiniciamos servicio de red
+#service networking restart
+/etc/init.d/networking restart
